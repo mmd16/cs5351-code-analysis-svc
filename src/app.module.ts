@@ -9,7 +9,6 @@ import { User } from './modules/user/user.entity';
 import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from './core/core.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({

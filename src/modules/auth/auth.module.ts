@@ -8,7 +8,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GithubStrategy } from './github.strategy';
 import { GoogleStrategy } from './google.strategy';
-import { JwtStrategy } from './jwt.strategy'; 
+import { JwtStrategy } from './jwt.strategy';
 import { OAuthToken } from './oauth-token.entity';
 
 @Module({
@@ -30,9 +30,9 @@ import { OAuthToken } from './oauth-token.entity';
     GithubStrategy,
     GoogleStrategy,
     JwtStrategy,
-    ConfigService
+    ConfigService,
   ],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

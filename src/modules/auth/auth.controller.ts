@@ -15,11 +15,13 @@ export class AuthController {
   async githubAuthCallback(@Req() req, @Res() res) {
     try {
       const { user } = req;
-      const {access_token, refreshToken} = await this.authService.login(user);
-      res.send({access_token, refreshToken});
+      const { access_token, refreshToken } = await this.authService.login(user);
+      res.send({ access_token, refreshToken });
     } catch (error) {
       console.error('GitHub authentication error:', error);
-      res.status(500).json({ message: 'Authentication failed', error: error.message });
+      res
+        .status(500)
+        .json({ message: 'Authentication failed', error: error.message });
     }
   }
 
@@ -31,7 +33,7 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res) {
     const { user } = req;
-      const jwt = await this.authService.login(user);
-      res.send(jwt);    
+    const jwt = await this.authService.login(user);
+    res.send(jwt);
   }
 }
