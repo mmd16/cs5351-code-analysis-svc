@@ -8,8 +8,10 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { GithubStrategy } from './github.strategy';
 import { GoogleStrategy } from './google.strategy';
-import { JwtStrategy } from './jwt.strategy'; 
-import { OAuthToken } from './oauth-token.entity';
+import { JwtStrategy } from '../../core/jwt.strategy'; 
+import { Token } from '../token/token.entity';
+import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
+
 
 @Module({
   imports: [
@@ -23,14 +25,14 @@ import { OAuthToken } from './oauth-token.entity';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, OAuthToken]),
+    TypeOrmModule.forFeature([User, Token, OAuthAccountInfo]),
   ],
   providers: [
     AuthService,
     GithubStrategy,
     GoogleStrategy,
     JwtStrategy,
-    ConfigService
+    ConfigService,
   ],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, JwtModule],

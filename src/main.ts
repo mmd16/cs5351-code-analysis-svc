@@ -1,7 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { JwtInterceptor } from './core/interceptors/jwt.interceptors';
 import * as cookieParser from 'cookie-parser';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,8 +9,7 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(cookieParser());
-  const jwtInterceptor = app.get(JwtInterceptor);
-  app.useGlobalInterceptors(jwtInterceptor);
+
   await app.listen(3000);
 }
 bootstrap();

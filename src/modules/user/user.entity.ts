@@ -1,36 +1,54 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
+import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
+import { Token } from '../token/token.entity';
 
-@Entity()
+@Entity('User')
 export class User {
-  @PrimaryGeneratedColumn()
-  ID: number;
+  @PrimaryGeneratedColumn({ name: 'ID' })
+  id: number;
 
-  @Column({ nullable: true })
-  @Index()
-  UserDisplayName: string;
+  @Column({ name: 'UserDisplayName', nullable: true })
+  userDisplayName: string | null;
 
-  @Column({ nullable: true })
-  Title: string;
+  @Column({ name: 'Title', nullable: true })
+  title: string | null;
 
-  @Column({ nullable: true })
-  RankAlias: string;
+  @Column({ name: 'RankAlias', nullable: true })
+  rankAlias: string | null;
 
-  @Column()
-  @Index()
-  Email: string;
+  @Column({ name: 'Email', unique: true })
+  email: string;
 
-  @Column({ nullable: true })
-  LoginName: string;
+  @Column({ name: 'LoginName', unique: true, nullable: true })
+  loginName: string | null;
 
-  @Column({ nullable: true })
-  Password: string;
+  @Column({ name: 'PasswordHash', nullable: true })
+  passwordHash: string | null;
 
-  @Column({ nullable: true })
-  GithubId: string;
+  @Column({
+    name: 'CreatedDatetime',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  createdDatetime: Date;
 
-  @Column({ nullable: true })
-  GoogleId: string;
+  @Column({
+    name: 'UpdatedDatetime',
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  updatedDatetime: Date;
 
-  @Column({ default: 1 })
-  Version: number;
+  @Column({ name: 'DeletedDatetime', type: 'timestamp', nullable: true })
+  deletedDatetime: Date | null;
+
+  @Column({ name: 'Version', default: 1 })
+  @VersionColumn()
+  version: number;
+
+  @OneToMany(() => OAuthAccountInfo, oauthAccountInfo => oauthAccountInfo.user)
+  oauthAccountInfo: OAuthAccountInfo[];
+
+  @OneToMany(() => Token, token => token.user)
+  tokens: Token[];
 }

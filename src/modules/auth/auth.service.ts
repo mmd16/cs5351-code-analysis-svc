@@ -3,81 +3,125 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/user.entity';
-import { OAuthToken } from './oauth-token.entity';
 import { ConfigService } from '@nestjs/config';
+import { Token } from '../token/token.entity';
+import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
 
 @Injectable()
 export class AuthService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
-        @InjectRepository(OAuthToken)
-        private tokenRepository: Repository<OAuthToken>,
+        @InjectRepository(Token)
+        private tokenRepository: Repository<Token>,
+        @InjectRepository(OAuthAccountInfo)
+        private oauthAccountInfoRepository: Repository<OAuthAccountInfo>,
         private jwtService: JwtService,
         private configService: ConfigService,
     ) { }
 
+    // async findOrCreateUser(profile: any, provider: string): Promise<User> {
+    //     let user: User;
+    //     // const oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({ where: { oauthProvider: provider, memberId: profile.username } });
+    //     user = await this.userRepository.findOne({ where: { id: profile.emails[0].value } });
+
+    //     if (!user) {
+    //         user = this.createUser(profile, provider);
+    //         const savedUser = await this.userRepository.save(user);
+    //         const oauthAccountInfo = new OAuthAccountInfo();
+    //         oauthAccountInfo.oauthProvider = provider;
+    //         oauthAccountInfo.memberId = profile.username;
+    //         oauthAccountInfo.user = savedUser;
+    //         await this.oauthAccountInfoRepository.save(oauthAccountInfo);
+
+
+    //     } else {
+    //         // Update existing user
+    //         const oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({ where: { oauthProvider: provider, memberId: profile.username } });
+    //         user = this.updateUser(user, profile, provider);
+    //         const savedUser = await this.userRepository.save(user);
+
+    //         if (!oauthAccountInfo) {
+    //             const oauthAccountInfo = new OAuthAccountInfo();
+    //             oauthAccountInfo.oauthProvider = provider;
+    //             oauthAccountInfo.memberId = profile.username;
+    //             oauthAccountInfo.user = user;
+    //             await this.oauthAccountInfoRepository.save(oauthAccountInfo);
+    //         }
+    //     }
+
+    //     return user;
+    // }
+
     async findOrCreateUser(profile: any, provider: string): Promise<User> {
-        let user: User;
+        const email = profile.emails[0].value;
+        const username = profile.username;
 
-        if (provider === 'github') {
-            user = await this.userRepository.findOne({ where: { GithubId: profile.username } });
-        } else if (provider === 'google') {
-            user = await this.userRepository.findOne({ where: { GoogleId: profile.username } });
-        }
-
-        console.log(!user);
+        // Attempt to retrieve user and their OAuth info simultaneously
+        let user = await this.userRepository.findOne({
+            where: { email: email },
+            relations: ['oauthAccountInfo'] // Assuming 'oauthAccountInfo' is the correct relation name
+        });
 
         if (!user) {
-            user = this.createUser(profile, provider);
-            return this.userRepository.save(user);
+            // Create user and OAuthAccountInfo if not found
+            user = await this.createUser(profile, provider);
         } else {
-            // Update existing user
-            user = this.updateUser(user, profile, provider);
-            return this.userRepository.save(user);
+            // If user exists, update user and check/create OAuth info
+            user = await this.updateUser(user, profile, provider);
+
+            let oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({
+                where: { oauthProvider: provider, memberId: username }
+            });
+
+            if (!oauthAccountInfo) {
+                oauthAccountInfo = new OAuthAccountInfo();
+                oauthAccountInfo.oauthProvider = provider;
+                oauthAccountInfo.memberId = username;
+                oauthAccountInfo.user = user;
+                await this.oauthAccountInfoRepository.save(oauthAccountInfo);
+            }
         }
+
+        return user;
     }
 
-    private createUser(profile: any, provider: string): User {
-        switch (provider) {
-            case 'github':
-                const user = new User();
-                user.UserDisplayName = profile.displayName;
-                user.GithubId = profile.username;
-                user.Email = profile.emails[0].value;
-                return user;
-            case 'google':
-                return null;
-            default:
-                throw new Error('Invalid provider');
-        }
+    private async createUser(profile: any, provider: string): Promise<User> {
+        const user = new User(); // Set user properties based on profile
+        user.email = profile.emails[0].value;
+        user.userDisplayName = profile.displayName;
+
+        const savedUser = await this.userRepository.save(user);
+
+        const oauthAccountInfo = new OAuthAccountInfo();
+        oauthAccountInfo.oauthProvider = provider;
+        oauthAccountInfo.memberId = profile.username;
+        oauthAccountInfo.user = savedUser;
+        await this.oauthAccountInfoRepository.save(oauthAccountInfo);
+
+        return savedUser;
     }
 
-    private updateUser(user: User, profile: any, provider: string): User {
-        switch (provider) {
-            case 'github':
-                user.UserDisplayName = profile.displayName;
-                user.Email = profile.emails[0].value;
-                return user;
-            case 'google':
-                return null;
-            default:
-                throw new Error('Invalid provider');
-        }
+    private async updateUser(user: User, profile: any, provider: string): Promise<User> {
+        // Update user properties
+        user.email = profile.emails[0].value; // Example property update
+        user.userDisplayName = profile.displayName;
+
+        return await this.userRepository.save(user);
     }
 
-    async createToken(user: User, provider: string): Promise<OAuthToken> {
-        let token = await this.tokenRepository.findOne({ where: { User: user, Provider: provider } });
-    
+
+    async createToken(user: User): Promise<Token> {
+        let token = await this.tokenRepository.findOne({ where: { user: user } });
+
         if (!token) {
-            token = new OAuthToken();
-            token.User = user;
-            token.Provider = provider;
+            token = new Token();
+            token.user = user;
         }
-    
-        token.AccessToken = this.generateAccessToken(user);
-        token.RefreshToken = this.generateRefreshToken(user);
-        token.ExpireDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+
+        token.accessToken = this.generateAccessToken(user);
+        token.refreshToken = this.generateRefreshToken(user);
+        token.expiresDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
         return this.tokenRepository.save(token);
     }
@@ -99,10 +143,16 @@ export class AuthService {
     // }
 
     async login(user: User): Promise<{ refreshToken: string, access_token: string }> {
-        const token = await this.tokenRepository.findOne({ where: { User: user, Provider: 'github' } });
+        const token = await this.tokenRepository.findOne({
+            where: { user: { id: user.id } },
+            relations: ['user']
+        });
+
+        console.log(token.accessToken);
+
         return {
-            access_token: token.AccessToken,
-            refreshToken: token.RefreshToken
+            access_token: token.accessToken,
+            refreshToken: token.refreshToken
         };
     }
 
@@ -115,7 +165,7 @@ export class AuthService {
             console.log('AuthService: Refresh token payload:', payload);
 
             const token = await this.tokenRepository.findOne({
-                where: { RefreshToken: refreshToken },
+                where: { refreshToken: refreshToken },
                 relations: ['User'],
             });
             console.log('AuthService: Found token in database:', token);
@@ -127,28 +177,27 @@ export class AuthService {
 
             const now = new Date();
             console.log('AuthService: Current time:', now);
-            console.log('AuthService: Token expire time:', token.ExpireDatetime);
+            console.log('AuthService: Token expire time:', token.expiresDatetime);
 
-            if (token.ExpireDatetime < now) {
+            if (token.expiresDatetime < now) {
                 console.log('AuthService: Token has expired');
                 throw new UnauthorizedException('Refresh token has expired');
             }
 
-            const user = token.User;
+            const user = token.user;
             console.log('AuthService: User associated with token:', user);
 
             const newAccessToken = this.generateAccessToken(user);
-            const newRefreshToken = this.generateRefreshToken(user);
 
-            token.AccessToken = newAccessToken;
-            token.RefreshToken = newRefreshToken;
-            token.ExpireDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+            token.accessToken = newAccessToken;
+            token.refreshToken = refreshToken;
+            token.expiresDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
             await this.tokenRepository.save(token);
             console.log('AuthService: New tokens generated and saved');
 
             return {
                 access_token: newAccessToken,
-                refresh_token: newRefreshToken,
+                refresh_token: refreshToken,
             };
         } catch (error) {
             console.error('AuthService: Refresh token error:', error);
@@ -157,7 +206,7 @@ export class AuthService {
     }
 
     private generateAccessToken(user: User): string {
-        const payload = { sub: user.ID, email: user.Email, type: 'access' };
+        const payload = { sub: user.id, email: user.email, type: 'access' };
         return this.jwtService.sign(payload, {
             secret: this.configService.get('JWT_SECRET'),
             expiresIn: this.configService.get('JWT_ACCESS_EXPIRATION'),
@@ -165,7 +214,7 @@ export class AuthService {
     }
 
     private generateRefreshToken(user: User): string {
-        const payload = { sub: user.ID, type: 'refresh' };
+        const payload = { sub: user.id, type: 'refresh' };
         return this.jwtService.sign(payload, {
             secret: this.configService.get('JWT_REFRESH_SECRET'),
             expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),

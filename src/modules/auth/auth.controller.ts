@@ -32,6 +32,6 @@ export class AuthController {
   async googleAuthCallback(@Req() req, @Res() res) {
     const { user } = req;
       const jwt = await this.authService.login(user);
-      res.send(jwt);    
+      res.send(jwt);
   }
 }
