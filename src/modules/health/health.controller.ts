@@ -3,6 +3,10 @@ import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
+import { ApiTags } from '@nestjs/swagger';
+
+//swagger: add to "healthcheck" tag
+@ApiTags('healthcheck')
 @Controller('health')
 export class HealthController {
     constructor(
