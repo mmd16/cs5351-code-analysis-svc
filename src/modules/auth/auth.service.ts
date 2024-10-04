@@ -55,7 +55,8 @@ export class AuthService {
 
     async findOrCreateUser(profile: any, provider: string): Promise<User> {
         const email = profile.emails[0].value;
-        const username = profile.username;
+        //id as username
+        const username = profile.id;
 
         // Attempt to retrieve user and their OAuth info simultaneously
         let user = await this.userRepository.findOne({
