@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, VersionColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  VersionColumn,
+  Index,
+} from 'typeorm';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
 import { Token } from '../token/token.entity';
 
@@ -41,9 +50,12 @@ export class User {
   @VersionColumn()
   version: number;
 
-  @OneToMany(() => OAuthAccountInfo, oauthAccountInfo => oauthAccountInfo.user)
+  @OneToMany(
+    () => OAuthAccountInfo,
+    (oauthAccountInfo) => oauthAccountInfo.user,
+  )
   oauthAccountInfo: OAuthAccountInfo[];
 
-  @OneToMany(() => Token, token => token.user)
+  @OneToMany(() => Token, (token) => token.user)
   tokens: Token[];
 }

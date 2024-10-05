@@ -1,4 +1,12 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, VersionColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  VersionColumn,
+} from 'typeorm';
 import { User } from '../user/user.entity';
 
 @Entity('Token')
@@ -35,7 +43,7 @@ export class Token {
   @VersionColumn()
   version: number;
 
-  @ManyToOne(() => User, user => user.tokens)
+  @ManyToOne(() => User, (user) => user.tokens)
   @JoinColumn({ name: 'UserID' })
   user: User;
 }

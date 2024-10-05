@@ -6,7 +6,9 @@ import { WHITELIST_ROUTES } from 'src/config/security.config';
 export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
-    const isWhitelisted = WHITELIST_ROUTES.some(route => request.url.startsWith(route));
+    const isWhitelisted = WHITELIST_ROUTES.some((route) =>
+      request.url.startsWith(route),
+    );
 
     if (isWhitelisted) {
       return true; // Allow access to whitelisted routes without token

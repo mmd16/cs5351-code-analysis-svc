@@ -10,7 +10,6 @@ import { OauthAccountInfoModule } from './modules/oauth-account-info/oauth-accou
 import { Token } from './modules/token/token.entity';
 import databaseConfig from './config/database.config';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,7 +18,8 @@ import databaseConfig from './config/database.config';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => configService.get('database'),
+      useFactory: (configService: ConfigService) =>
+        configService.get('database'),
       inject: [ConfigService],
     }),
     // TypeOrmModule.forRoot({

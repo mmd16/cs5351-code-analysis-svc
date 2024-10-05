@@ -4,7 +4,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtAuthGuard } from './guard/jwtAuth.guard';
 
-
 @Global()
 @Module({
   imports: [ConfigModule],

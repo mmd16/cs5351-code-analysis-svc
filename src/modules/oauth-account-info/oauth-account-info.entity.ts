@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  VersionColumn,
+  Index,
+} from 'typeorm';
 import { User } from '../user/user.entity';
 
 @Entity('OAuthAccountInfo')
@@ -35,7 +43,7 @@ export class OAuthAccountInfo {
   @VersionColumn()
   version: number;
 
-  @ManyToOne(() => User, user => user.oauthAccountInfo)
+  @ManyToOne(() => User, (user) => user.oauthAccountInfo)
   @JoinColumn({ name: 'UserID' })
   user: User;
 }

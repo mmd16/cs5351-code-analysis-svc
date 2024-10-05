@@ -11,7 +11,6 @@ import { Token } from '../token/token.entity';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
 import { HttpModule } from '@nestjs/axios';
 
-
 @Module({
   imports: [
     ConfigModule,
@@ -27,12 +26,8 @@ import { HttpModule } from '@nestjs/axios';
     }),
     TypeOrmModule.forFeature([User, Token, OAuthAccountInfo]),
   ],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    ConfigService,
-  ],
+  providers: [AuthService, JwtStrategy, ConfigService],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

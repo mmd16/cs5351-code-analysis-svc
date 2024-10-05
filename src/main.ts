@@ -8,11 +8,11 @@ async function bootstrap() {
 
   /*configure swagger*/
   const config = new DocumentBuilder()
-  .setTitle('CS5351 Code Analysis')
-  .setDescription('API description: Swagger - Backend')
-  .setVersion('1.0')
-  .addTag('auth')
-  .build();
+    .setTitle('CS5351 Code Analysis')
+    .setDescription('API description: Swagger - Backend')
+    .setVersion('1.0')
+    .addTag('auth')
+    .build();
 
   const document = SwaggerModule.createDocument(app, config);
   //access swagger using hostname:port/api

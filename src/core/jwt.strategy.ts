@@ -16,9 +16,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(request: any, payload: any) {
-    const isWhitelisted = WHITELIST_ROUTES.some(route => request.url.startsWith(route));
+    const isWhitelisted = WHITELIST_ROUTES.some((route) =>
+      request.url.startsWith(route),
+    );
     if (isWhitelisted) {
-      return true; 
+      return true;
     }
 
     return { userId: payload.sub, email: payload.email };

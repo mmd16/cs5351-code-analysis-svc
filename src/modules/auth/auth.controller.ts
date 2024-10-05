@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
   @Post('token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Exchange OAuth token for access token' })
@@ -26,7 +26,10 @@ export class AuthController {
   @Post('refreshAccessToken')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
-  @ApiResponse({ status: 200, description: 'New access token generated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'New access token generated successfully',
+  })
   @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
   @ApiBody({ type: RefreshTokenDto })
   async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {

@@ -1,5 +1,5 @@
 export const WHITELIST_ROUTES = [
-    '/health',
-    '/auth/token',
-    '/auth/refreshAccessToken'
-  ];
+  '/health',
+  '/auth/token',
+  '/auth/refreshAccessToken',
+];
