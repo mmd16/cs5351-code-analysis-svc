@@ -21,11 +21,12 @@ async function bootstrap() {
   /*configure swagger*/
 
   app.enableCors({
-    origin: 'http://localhost:3000', // or your frontend URL
+    origin: true,
     credentials: true,
   });
+
   app.use(cookieParser());
 
-  await app.listen(3000);
+  await app.listen(8080);
 }
 bootstrap();
