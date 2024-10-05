@@ -6,16 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { GithubStrategy } from './github.strategy';
-import { GoogleStrategy } from './google.strategy';
-import { JwtStrategy } from '../../core/jwt.strategy'; 
+import { JwtStrategy } from '../../core/jwt.strategy';
 import { Token } from '../token/token.entity';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
+import { HttpModule } from '@nestjs/axios';
 
 
 @Module({
   imports: [
     ConfigModule,
+    HttpModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -29,8 +29,6 @@ import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entit
   ],
   providers: [
     AuthService,
-    GithubStrategy,
-    GoogleStrategy,
     JwtStrategy,
     ConfigService,
   ],

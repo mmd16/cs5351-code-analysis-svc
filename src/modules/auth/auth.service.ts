@@ -1,11 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
-import { User } from '../user/user.entity';
+import { HttpService } from '@nestjs/axios';
+import { HttpException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Token } from '../token/token.entity';
+import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import axios from 'axios';
+import { TokenExchangeDto } from 'src/common/dto/token-exchange.dto';
+import { Repository } from 'typeorm';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
+import { Token } from '../token/token.entity';
+import { User } from '../user/user.entity';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -18,49 +22,13 @@ export class AuthService {
         private oauthAccountInfoRepository: Repository<OAuthAccountInfo>,
         private jwtService: JwtService,
         private configService: ConfigService,
+        private httpService: HttpService
     ) { }
 
-    // async findOrCreateUser(profile: any, provider: string): Promise<User> {
-    //     let user: User;
-    //     // const oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({ where: { oauthProvider: provider, memberId: profile.username } });
-    //     user = await this.userRepository.findOne({ where: { id: profile.emails[0].value } });
-
-    //     if (!user) {
-    //         user = this.createUser(profile, provider);
-    //         const savedUser = await this.userRepository.save(user);
-    //         const oauthAccountInfo = new OAuthAccountInfo();
-    //         oauthAccountInfo.oauthProvider = provider;
-    //         oauthAccountInfo.memberId = profile.username;
-    //         oauthAccountInfo.user = savedUser;
-    //         await this.oauthAccountInfoRepository.save(oauthAccountInfo);
-
-
-    //     } else {
-    //         // Update existing user
-    //         const oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({ where: { oauthProvider: provider, memberId: profile.username } });
-    //         user = this.updateUser(user, profile, provider);
-    //         const savedUser = await this.userRepository.save(user);
-
-    //         if (!oauthAccountInfo) {
-    //             const oauthAccountInfo = new OAuthAccountInfo();
-    //             oauthAccountInfo.oauthProvider = provider;
-    //             oauthAccountInfo.memberId = profile.username;
-    //             oauthAccountInfo.user = user;
-    //             await this.oauthAccountInfoRepository.save(oauthAccountInfo);
-    //         }
-    //     }
-
-    //     return user;
-    // }
-
     async findOrCreateUser(profile: any, provider: string): Promise<User> {
-        const email = profile.emails[0].value;
-        //id as username
-        const username = profile.id;
-
         // Attempt to retrieve user and their OAuth info simultaneously
         let user = await this.userRepository.findOne({
-            where: { email: email },
+            where: { email: profile.email },
             relations: ['oauthAccountInfo'] // Assuming 'oauthAccountInfo' is the correct relation name
         });
 
@@ -72,13 +40,13 @@ export class AuthService {
             user = await this.updateUser(user, profile, provider);
 
             let oauthAccountInfo = await this.oauthAccountInfoRepository.findOne({
-                where: { oauthProvider: provider, memberId: username }
+                where: { oauthProvider: provider, memberId: profile.name }
             });
 
             if (!oauthAccountInfo) {
                 oauthAccountInfo = new OAuthAccountInfo();
                 oauthAccountInfo.oauthProvider = provider;
-                oauthAccountInfo.memberId = username;
+                oauthAccountInfo.memberId = profile.name;
                 oauthAccountInfo.user = user;
                 await this.oauthAccountInfoRepository.save(oauthAccountInfo);
             }
@@ -89,15 +57,16 @@ export class AuthService {
 
     private async createUser(profile: any, provider: string): Promise<User> {
         const user = new User(); // Set user properties based on profile
-        user.email = profile.emails[0].value;
-        user.userDisplayName = profile.displayName;
+        user.email = profile.email;
+        user.userDisplayName = profile.name;
 
         const savedUser = await this.userRepository.save(user);
 
         const oauthAccountInfo = new OAuthAccountInfo();
         oauthAccountInfo.oauthProvider = provider;
-        oauthAccountInfo.memberId = profile.username;
+        oauthAccountInfo.memberId = profile.name;
         oauthAccountInfo.user = savedUser;
+
         await this.oauthAccountInfoRepository.save(oauthAccountInfo);
 
         return savedUser;
@@ -105,8 +74,8 @@ export class AuthService {
 
     private async updateUser(user: User, profile: any, provider: string): Promise<User> {
         // Update user properties
-        user.email = profile.emails[0].value; // Example property update
-        user.userDisplayName = profile.displayName;
+        user.email = profile.email; // Example property update
+        user.userDisplayName = profile.name;
 
         return await this.userRepository.save(user);
     }
@@ -122,42 +91,11 @@ export class AuthService {
 
         token.accessToken = this.generateAccessToken(user);
         token.refreshToken = this.generateRefreshToken(user);
-        token.expiresDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
 
         return this.tokenRepository.save(token);
     }
 
-    // async createOAuthToken(user: User, accessToken: string, refreshToken: string, provider: string): Promise<OAuthToken> {
-    //     let token = await this.tokenRepository.findOne({ where: { User: user, Provider: provider } });
-
-    //     if (!token) {
-    //         token = new OAuthToken();
-    //         token.User = user;
-    //         token.Provider = provider;
-    //     }
-
-    //     token.AccessToken = accessToken;
-    //     token.RefreshToken = refreshToken;
-    //     token.ExpireDatetime = new Date(Date.now() + 60); // 1 hour from now
-
-    //     return this.tokenRepository.save(token);
-    // }
-
-    async login(user: User): Promise<{ refreshToken: string, access_token: string }> {
-        const token = await this.tokenRepository.findOne({
-            where: { user: { id: user.id } },
-            relations: ['user']
-        });
-
-        console.log(token.accessToken);
-
-        return {
-            access_token: token.accessToken,
-            refreshToken: token.refreshToken
-        };
-    }
-
-    async refreshToken(refreshToken: string): Promise<{ access_token: string; refresh_token: string }> {
+    async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
         console.log('AuthService: Attempting to refresh token');
         try {
             const payload = this.jwtService.verify(refreshToken, {
@@ -167,7 +105,7 @@ export class AuthService {
 
             const token = await this.tokenRepository.findOne({
                 where: { refreshToken: refreshToken },
-                relations: ['User'],
+                relations: ['user'],
             });
             console.log('AuthService: Found token in database:', token);
 
@@ -177,10 +115,11 @@ export class AuthService {
             }
 
             const now = new Date();
+            const expirationDate = new Date(payload.exp * 1000); // Convert exp to milliseconds
             console.log('AuthService: Current time:', now);
-            console.log('AuthService: Token expire time:', token.expiresDatetime);
+            console.log('AuthService: Token expire time:', expirationDate);
 
-            if (token.expiresDatetime < now) {
+            if (expirationDate < now) {
                 console.log('AuthService: Token has expired');
                 throw new UnauthorizedException('Refresh token has expired');
             }
@@ -191,14 +130,11 @@ export class AuthService {
             const newAccessToken = this.generateAccessToken(user);
 
             token.accessToken = newAccessToken;
-            token.refreshToken = refreshToken;
-            token.expiresDatetime = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
             await this.tokenRepository.save(token);
             console.log('AuthService: New tokens generated and saved');
 
             return {
                 access_token: newAccessToken,
-                refresh_token: refreshToken,
             };
         } catch (error) {
             console.error('AuthService: Refresh token error:', error);
@@ -221,4 +157,43 @@ export class AuthService {
             expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION'),
         });
     }
+
+    async exchangeToken(tokenRequest: TokenExchangeDto) {
+        // Verify the code and code verifier
+        const tokenResponse = await this.verifyGoogleToken(tokenRequest);
+
+        // Create or update user based on the OAuth provider's response
+        const user = await this.findOrCreateUser(tokenResponse, 'google');
+
+        // Generate JWT tokens
+        const token = await this.createToken(user);
+
+        return { access_token: token.accessToken, refreshToken: token.refreshToken };
+    }
+
+    private async verifyGoogleToken(tokenRequest: TokenExchangeDto) {
+        const client = new OAuth2Client(tokenRequest.clientId);
+
+        try {
+            const ticket = await client.verifyIdToken({
+                idToken: tokenRequest.credential,
+                audience: tokenRequest.clientId,
+            });
+
+            const payload = ticket.getPayload();
+
+            if (!payload) {
+                throw new HttpException('Invalid token payload', HttpStatus.BAD_REQUEST);
+            }
+
+
+            console.log(payload);
+
+            return payload;
+        } catch (error) {
+            console.error('Google token verification error:', error);
+            throw new HttpException('Failed to verify Google token', HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

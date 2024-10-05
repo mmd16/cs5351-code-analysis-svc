@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, VersionColumn } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn, VersionColumn } from 'typeorm';
 import { User } from '../user/user.entity';
 
 @Entity('Token')
@@ -7,9 +7,11 @@ export class Token {
   id: number;
 
   @Column({ name: 'AccessToken' })
+  @Index({ unique: true })
   accessToken: string;
 
   @Column({ name: 'RefreshToken' })
+  @Index({ unique: true })
   refreshToken: string;
 
   @Column({
@@ -28,9 +30,6 @@ export class Token {
 
   @Column({ name: 'DeletedDatetime', type: 'timestamp', nullable: true })
   deletedDatetime: Date | null;
-
-  @Column({ name: 'ExpiresDatetime', type: 'timestamp', nullable: true })
-  expiresDatetime: Date | null;
 
   @Column({ name: 'Version' })
   @VersionColumn()

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, VersionColumn, Index } from 'typeorm';
 import { User } from '../user/user.entity';
 
 @Entity('OAuthAccountInfo')
@@ -7,9 +7,11 @@ export class OAuthAccountInfo {
   id: number;
 
   @Column({ name: 'MemberId' })
+  @Index({ unique: true })
   memberId: string;
 
   @Column({ name: 'OauthProvider' })
+  @Index({ unique: false })
   oauthProvider: string;
 
   @Column({

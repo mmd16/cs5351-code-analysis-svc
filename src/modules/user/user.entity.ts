@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, VersionColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, VersionColumn, Index } from 'typeorm';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
 import { Token } from '../token/token.entity';
 
@@ -13,14 +13,9 @@ export class User {
   @Column({ name: 'Title', nullable: true })
   title: string | null;
 
-  @Column({ name: 'RankAlias', nullable: true })
-  rankAlias: string | null;
-
   @Column({ name: 'Email', unique: true })
+  @Index({ unique: true })
   email: string;
-
-  @Column({ name: 'LoginName', unique: true, nullable: true })
-  loginName: string | null;
 
   @Column({ name: 'PasswordHash', nullable: true })
   passwordHash: string | null;
