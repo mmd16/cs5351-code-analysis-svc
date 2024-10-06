@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { OAuthAccountInfo } from '../oauth-account-info/oauth-account-info.entity';
 import { Token } from '../token/token.entity';
-
+import { AuthorizedProject } from '../authorized-project/authorized-project.entity';
 @Entity('User')
 export class User {
   @PrimaryGeneratedColumn({ name: 'ID' })
@@ -58,4 +58,8 @@ export class User {
 
   @OneToMany(() => Token, (token) => token.user)
   tokens: Token[];
+
+  @OneToMany(() => AuthorizedProject, (authorizedProject) => authorizedProject.user)
+  authorizedProjects: AuthorizedProject[];
+
 }

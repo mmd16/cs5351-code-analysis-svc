@@ -8,6 +8,13 @@ import { CoreModule } from './core/core.module';
 import { TokenModule } from './modules/token/token.module';
 import { OauthAccountInfoModule } from './modules/oauth-account-info/oauth-account-info.module';
 import { Token } from './modules/token/token.entity';
+import { AuthorizedProjectModule } from './modules/authorized-project/authorized-project.module';
+import { ProjectModule } from './modules/project/project.module';
+import { ProjectVersionModule } from './modules/project-version/project-version.module';
+import { ScanModule } from './modules/scan/scan.module';
+import { ScanSuggestionModule } from './modules/scan-suggestion/scan-suggestion.module';
+import { MigrationModule } from './modules/migration/migration.module';
+import { LibrarySuggestionModule } from './modules/library-suggestion/library-suggestion.module';
 import databaseConfig from './config/database.config';
 
 @Module({
@@ -32,6 +39,13 @@ import databaseConfig from './config/database.config';
     CoreModule,
     TokenModule,
     OauthAccountInfoModule,
+    AuthorizedProjectModule,
+    ProjectModule,
+    ProjectVersionModule,
+    ScanModule,
+    ScanSuggestionModule,
+    MigrationModule,
+    LibrarySuggestionModule,
   ],
 })
 export class AppModule {}
