@@ -16,6 +16,7 @@ import { ScanSuggestionModule } from './modules/scan-suggestion/scan-suggestion.
 import { MigrationModule } from './modules/migration/migration.module';
 import { LibrarySuggestionModule } from './modules/library-suggestion/library-suggestion.module';
 import databaseConfig from './config/database.config';
+import {OllamaModule} from './modules/ollama/ollama.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import databaseConfig from './config/database.config';
     ScanSuggestionModule,
     MigrationModule,
     LibrarySuggestionModule,
+    OllamaModule,
   ],
 })
 export class AppModule {}
