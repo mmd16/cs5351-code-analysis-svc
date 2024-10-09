@@ -10,7 +10,7 @@ export class OllamaController {
 
   @HttpCode(HttpStatus.OK)
   @Post('call')
-  async callCodeLlama(@Body('prompt') prompt: string) {
+  async callLlama(@Body('prompt') prompt: string) {
     return this.ollamaService.callLlama(prompt);
   }
 }
